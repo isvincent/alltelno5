@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>楊梅高中 分機通訊錄 (手機版)</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-light: #eff6ff;
+      --dial-green: #16a34a;
+    }
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Noto Sans TC', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      touch-action: manipulation;
+    }
+    /* Hide scrollbars but keep functionality */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .tap-active:active {
+      transform: scale(0.96);
+      transition: transform 0.1s ease;
+    }
+    .safe-bottom {
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 76px);
+    }
+    .highlight-text {
+      background-color: #fef08a;
+      color: #854d0e;
+      font-weight: 700;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex justify-center selection:bg-blue-100 selection:text-blue-800">
+
+  <!-- Mobile Container Wrapper (Simulates mobile screen on desktop, full width on phones) -->
+  <div class="w-full max-w-md bg-white min-h-screen flex flex-col shadow-xl border-x border-slate-200/80 relative">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform -translate-y-16 opacity-0 pointer-events-none transition-all duration-300 w-11/12 max-w-xs flex items-center justify-center gap-2 bg-slate-900/95 text-white px-4 py-2.5 rounded-full shadow-2xl backdrop-blur-sm text-xs font-medium border border-slate-700/60">
+      <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+      <span id="toast-message">已成功複製</span>
+    </div>
+
+    <!-- 1. Mobile Top Bar -->
+    <header class="sticky top-0 z-30 bg-gradient-to-b from-blue-900 to-indigo-900 text-white pt-3 pb-3 px-4 shadow-md">
+      <!-- Title & Main Trunk Call Button -->
+      <div class="flex items-center justify-between gap-2 mb-2.5">
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-1">
+              楊梅高中
+              <span class="text-xs font-normal text-sky-200">分機通訊錄</span>
+            </h1>
+          </div>
+          <p class="text-[10px] text-sky-300 mt-0.5">總務處編製 • 113/09/07 版</p>
+        </div>
+
+        <!-- Quick Dial Operator Button -->
+        <button 
+          onclick="openTrunkModal()" 
+          class="tap-active flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md border border-emerald-400/30 shrink-0"
+        >
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 4V3z"></path>
+          </svg>
+          <span>撥總機</span>
+        </button>
+      </div>
+
+      <!-- Mobile Search Bar -->
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+        <input 
+          type="search" 
+          id="search-input" 
+          placeholder="搜尋分機、姓名、職稱或處室..." 
+          class="w-full pl-9 pr-8 py-2 bg-white/95 text-slate-900 placeholder-slate-400 text-xs rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 shadow-inner"
+          autocomplete="off"
+        />
+        <button id="clear-search" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Quick Scroll Category Chips -->
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2.5 pb-0.5 text-[11px]" id="category-pills">
+        <button data-cat="all" class="cat-pill active px-3 py-1 rounded-full font-semibold transition shrink-0 bg-white text-blue-900 shadow-sm">
+          全部
+        </button>
+        <button data-cat="favorites" class="cat-pill px-3 py-1 rounded-full font-medium transition shrink-0 bg-white/20 hover:bg-white/30 text-white flex items-center gap-1">
+          <svg class="w-3 h-3 text-amber-300 fill-amber-300" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+          <span>常用</span> <span id="fav-count" class="text-[9px] bg-white/30 px-1 rounded-full">0</span>
+        </button>
+        <button data-cat="行政處室" class="cat-pill px-3 py-1 rounded-full font-medium transition shrink-0 bg-white/20 hover:bg-white/30 text-white">
+          行政處室
+        </button>
+        <button data-cat="導師與教師" class="cat-pill px-3 py-1 rounded-full font-medium transition shrink-0 bg-white/20 hover:bg-white/30 text-white">
+          導師專任
+        </button>
+        <button data-cat="專科教室與實驗室" class="cat-pill px-3 py-1 rounded-full font-medium transition shrink-0 bg-white/20 hover:bg-white/30 text-white">
+          專科實驗
+        </button>
+        <button data-cat="特教與輔導" class="cat-pill px-3 py-1 rounded-full font-medium transition shrink-0 bg-white/20 hover:bg-white/30 text-white">
+          輔導特教
+        </button>
+        <button data-cat="場館與大樓設施" class="cat-pill px-3 py-1 rounded-full font-medium transition shrink-0 bg-white/20 hover:bg-white/30 text-white">
+          御風場館
+        </button>
+      </div>
+    </header>
+
+    <!-- Search Status Bar -->
+    <div id="search-status-bar" class="hidden bg-blue-50 px-4 py-2 border-b border-blue-100 flex items-center justify-between text-xs text-blue-800">
+      <span>找到 <b id="search-count" class="text-blue-900">0</b> 筆相關結果</span>
+      <button onclick="clearSearch()" class="text-blue-600 underline text-[11px]">清除</button>
+    </div>
+
+    <!-- Main Vertical Contacts List -->
+    <main class="flex-1 px-3 py-3 safe-bottom space-y-4">
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden py-14 text-center px-4">
+        <div class="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+        <p class="text-sm font-semibold text-slate-700">查無相符的分機或同仁</p>
+        <p class="text-xs text-slate-400 mt-1">請嘗試搜尋其他關鍵字或姓氏</p>
+        <button onclick="clearSearch()" class="mt-3 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg tap-active">
+          清除搜尋
+        </button>
+      </div>
+
+      <!-- Contacts Container rendered dynamically -->
+      <div id="contacts-container" class="space-y-3.5"></div>
+
+    </main>
+
+    <!-- Bottom Navigation Bar (Mobile Native Style) -->
+    <nav class="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none">
+      <div class="w-full max-w-md bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-lg px-2 py-1.5 flex items-center justify-around pointer-events-auto">
+        
+        <!-- Tab: All Contacts -->
+        <button onclick="switchTab('all')" id="tab-all" class="flex flex-col items-center justify-center py-1 px-3 text-blue-600 transition tap-active">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+          </svg>
+          <span class="text-[10px] font-medium">通訊錄</span>
+        </button>
+
+        <!-- Tab: Favorites -->
+        <button onclick="switchTab('favorites')" id="tab-fav" class="flex flex-col items-center justify-center py-1 px-3 text-slate-500 hover:text-slate-900 transition tap-active">
+          <div class="relative">
+            <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+            </svg>
+            <span id="badge-fav" class="hidden absolute -top-1 -right-2 w-3.5 h-3.5 bg-amber-500 text-white rounded-full text-[8px] flex items-center justify-center font-bold">0</span>
+          </div>
+          <span class="text-[10px] font-medium">我的常用</span>
+        </button>
+
+        <!-- Tab: Direct Lines & Faxes -->
+        <button onclick="switchTab('direct')" id="tab-direct" class="flex flex-col items-center justify-center py-1 px-3 text-slate-500 hover:text-slate-900 transition tap-active">
+          <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+          </svg>
+          <span class="text-[10px] font-medium">處室專線</span>
+        </button>
+
+        <!-- Tab: Dial Action -->
+        <button onclick="openTrunkModal()" class="flex flex-col items-center justify-center py-1 px-3 text-slate-500 hover:text-slate-900 transition tap-active">
+          <div class="w-5 h-5 mb-0.5 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 4V3z"></path>
+            </svg>
+          </div>
+          <span class="text-[10px] font-medium">總機線路</span>
+        </button>
+
+      </div>
+    </nav>
+
+    <!-- Modal: Dial Operator Action Sheet -->
+    <div id="trunk-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end justify-center opacity-0 pointer-events-none transition-opacity duration-200">
+      <div id="trunk-modal-content" class="w-full max-w-md bg-white rounded-t-3xl p-5 shadow-2xl transform translate-y-full transition-transform duration-300 space-y-4">
+        
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-base font-bold text-slate-800">撥打楊梅高中總機</h3>
+            <p class="text-xs text-slate-500 mt-0.5">點擊電話號碼將自動啟動手機撥號</p>
+          </div>
+          <button onclick="closeTrunkModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-full bg-slate-100 tap-active">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+
+        <div class="space-y-2.5">
+          <!-- Main Line -->
+          <a href="tel:034789618" class="flex items-center justify-between p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 tap-active">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 4V3z"></path></svg>
+              </div>
+              <div>
+                <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">代表號</span>
+                <p class="text-base font-bold font-mono tracking-wider mt-0.5">03-4789618</p>
+              </div>
+            </div>
+            <span class="text-xs font-semibold text-emerald-700 bg-white px-3 py-1.5 rounded-xl border border-emerald-200 shadow-2xs">立即撥打</span>
+          </a>
+
+          <!-- Line 2 -->
+          <a href="tel:034780449" class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 tap-active">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 4V3z"></path></svg>
+              </div>
+              <div>
+                <span class="text-[11px] text-slate-500 font-medium">第二線</span>
+                <p class="text-sm font-bold font-mono">03-4780449</p>
+              </div>
+            </div>
+            <span class="text-xs text-slate-600 font-medium">撥打</span>
+          </a>
+
+          <!-- Line 3 -->
+          <a href="tel:034780740" class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 tap-active">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 4V3z"></path></svg>
+              </div>
+              <div>
+                <span class="text-[11px] text-slate-500 font-medium">第三線</span>
+                <p class="text-sm font-bold font-mono">03-4780740</p>
+              </div>
+            </div>
+            <span class="text-xs text-slate-600 font-medium">撥打</span>
+          </a>
+        </div>
+
+        <button onclick="closeTrunkModal()" class="w-full py-2.5 text-center text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl tap-active">
+          取消
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Modal: Multi-Extension Selector Action Sheet -->
+    <div id="ext-select-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end justify-center opacity-0 pointer-events-none transition-opacity duration-200">
+      <div id="ext-select-content" class="w-full max-w-md bg-white rounded-t-3xl p-5 shadow-2xl transform translate-y-full transition-transform duration-300 space-y-3.5">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div>
+            <h3 id="ext-modal-title" class="text-base font-bold text-slate-800">選擇要撥打的分機</h3>
+            <p id="ext-modal-subtitle" class="text-xs text-slate-500 mt-0.5">此辦公室共有多組分機號碼</p>
+          </div>
+          <button onclick="closeExtModal()" class="text-slate-400 p-1 rounded-full bg-slate-100 tap-active">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+
+        <div id="ext-modal-options" class="space-y-2">
+          <!-- Dynamically populated options -->
+        </div>
+
+        <button onclick="closeExtModal()" class="w-full py-2.5 text-center text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl tap-active">
+          關閉
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Complete Directory Data
+    const DIRECTORY_DATA = [
+      {
+        id: "principal",
+        category: "行政處室",
+        department: "校長室",
+        directLine: "",
+        fax: "4856117",
+        items: [
+          { title: "校長", name: "鍾校長", ext: ["1101"] },
+          { title: "秘書", name: "黃秘書", ext: ["1102"] },
+          { title: "技工", name: "劉小姐", ext: ["1103"] },
+          { title: "校長宿舍", name: "", ext: ["1104"] }
+        ]
+      },
+      {
+        id: "partner_org",
+        category: "場館與大樓設施",
+        department: "協力組織",
+        directLine: "",
+        fax: "",
+        items: [
+          { title: "警衛室", name: "", ext: ["1110"] },
+          { title: "聯合辦公室", name: "", ext: ["1112"] },
+          { title: "第一會議室", name: "", ext: ["1113"] },
+          { title: "交通安全教室", name: "", ext: ["1114"] },
+          { title: "第二會議室", name: "", ext: ["1115"] }
+        ]
+      },
+      {
+        id: "personnel",
+        category: "行政處室",
+        department: "人事室",
+        directLine: "4784103",
+        fax: "4755774",
+        items: [
+          { title: "主任", name: "邱主任", ext: ["1121"] },
+          { title: "組員", name: "陳先生", ext: ["1122"] }
+        ]
+      },
+      {
+        id: "accounting",
+        category: "行政處室",
+        department: "會計室",
+        directLine: "4789683",
+        fax: "4782322",
+        items: [
+          { title: "主任", name: "林主任", ext: ["1131"] },
+          { title: "組員", name: "張小姐", ext: ["1132"] },
+          { title: "佐理員", name: "陳小姐", ext: ["1133"] }
+        ]
+      },
+      {
+        id: "academic",
+        category: "行政處室",
+        department: "教務處",
+        directLine: "4783574",
+        fax: "4882675",
+        items: [
+          { title: "主任", name: "李主任", ext: ["1201"] },
+          { title: "教學組長", name: "邱組長", ext: ["1211"] },
+          { title: "幹事", name: "張小姐", ext: ["1212"] },
+          { title: "印刷室", name: "陳先生", ext: ["1213"] },
+          { title: "註冊組長", name: "賴組長", ext: ["1221"] },
+          { title: "幹事", name: "曾小姐", ext: ["1222"] },
+          { title: "設備組長", name: "鄭組長", ext: ["1231"] },
+          { title: "助理員", name: "謝小姐", ext: ["1232"] },
+          { title: "書記", name: "吳先生", ext: ["1233"] },
+          { title: "數位前導助理", name: "王小姐", ext: ["1234"] },
+          { title: "實驗研究組長", name: "邱組長", ext: ["1241"] },
+          { title: "幹事", name: "宋先生", ext: ["1242"] },
+          { title: "均質化專案助理", name: "", ext: ["1243"] },
+          { title: "學習歷程檔案助理", name: "楊小姐", ext: ["1244"] },
+          { title: "試務組組長", name: "蘇組長", ext: ["1251"] },
+          { title: "幹事", name: "蔡小姐", ext: ["1252"] },
+          { title: "業務分機", name: "", ext: ["1261"] },
+          { title: "英語教師", name: "", ext: ["1262"] },
+          { title: "雙語助理", name: "葉先生", ext: ["1263"] },
+          { title: "雙語教師", name: "高老師", ext: ["1264"] }
+        ]
+      },
+      {
+        id: "general_affairs",
+        category: "行政處室",
+        department: "總務處",
+        directLine: "4783349",
+        fax: "4780164",
+        items: [
+          { title: "主任", name: "劉主任", ext: ["1401"] },
+          { title: "文書組長", name: "黃組長", ext: ["1411"] },
+          { title: "臨時人員", name: "鍾小姐", ext: ["1412"] },
+          { title: "出納組長", name: "黃組長", ext: ["1421"] },
+          { title: "庶務組長", name: "劉組長", ext: ["1431"] },
+          { title: "財管管理員", name: "謝先生", ext: ["1432"] },
+          { title: "採購幹事", name: "張先生", ext: ["1433"] },
+          { title: "學務創新人力", name: "彭先生", ext: ["1434"] },
+          { title: "臨時人員", name: "宋先生", ext: ["1435"] }
+        ]
+      },
+      {
+        id: "student_affairs",
+        category: "行政處室",
+        department: "學務處",
+        directLine: "4758950",
+        fax: "4757034",
+        items: [
+          { title: "主任", name: "呂主任", ext: ["1301"] },
+          { title: "午餐秘書", name: "李老師", ext: ["1302"] },
+          { title: "學務創新人力", name: "呂先生", ext: ["1303"] },
+          { title: "訓育組長", name: "簡組長", ext: ["1311"] },
+          { title: "幹事", name: "傅小姐", ext: ["1312"] },
+          { title: "活動組長", name: "魏組長", ext: ["1321"] },
+          { title: "學務創新人力", name: "林先生", ext: ["1322"] },
+          { title: "體育組長", name: "廖組長", ext: ["1331"] },
+          { title: "游泳池", name: "陳先生", ext: ["1333"] },
+          { title: "管理員", name: "鍾小姐", ext: ["1334"] },
+          { title: "跆拳道館", name: "", ext: ["1335"] },
+          { title: "衛生組長", name: "詹組長", ext: ["1341"] },
+          { title: "護理師(健康中心)", name: "陳小姐", ext: ["1342"] },
+          { title: "學務創新人力", name: "張先生", ext: ["1343"] },
+          { title: "健康中心", name: "陳小姐", ext: ["1119"] },
+          { title: "禮堂準備室", name: "", ext: ["1324"] }
+        ]
+      },
+      {
+        id: "campus_security",
+        category: "行政處室",
+        department: "校安中心",
+        directLine: "4854998",
+        fax: "4780428",
+        items: [
+          { title: "學務創新人力", name: "廖先生", ext: ["1351"] },
+          { title: "生輔組長", name: "張組長", ext: ["1352"] },
+          { title: "學務創新人力", name: "李先生", ext: ["1353"] },
+          { title: "學務創新人力", name: "陳先生", ext: ["1354"] },
+          { title: "幹事", name: "范小姐", ext: ["1355"] },
+          { title: "學務創新人力", name: "郭先生", ext: ["1356"] },
+          { title: "學務創新人力", name: "彭先生", ext: ["1357"] }
+        ]
+      },
+      {
+        id: "counseling",
+        category: "特教與輔導",
+        department: "輔導室",
+        directLine: "4758437",
+        fax: "",
+        items: [
+          { title: "輔導主任", name: "林主任", ext: ["1503"] },
+          { title: "專任輔導教師", name: "陳老師", ext: ["1504"] },
+          { title: "專任輔導教師", name: "吳老師", ext: ["1507"] },
+          { title: "專任輔導教師", name: "金老師", ext: ["1501"] },
+          { title: "專任輔導教師", name: "陳老師", ext: ["1502"] },
+          { title: "特教教師1", name: "何老師", ext: ["1505"] },
+          { title: "特教教師2", name: "林老師", ext: ["1506"] },
+          { title: "特教教師3", name: "曾老師", ext: ["1511"] },
+          { title: "生涯資訊室", name: "", ext: ["1508"] },
+          { title: "團體諮商室", name: "", ext: ["1509"] },
+          { title: "學習中心", name: "", ext: ["1510"] }
+        ]
+      },
+      {
+        id: "library",
+        category: "行政處室",
+        department: "圖書館",
+        directLine: "4780586",
+        fax: "",
+        items: [
+          { title: "主任", name: "施主任", ext: ["1601"] },
+          { title: "讀者服務組長", name: "何組長", ext: ["1602"] },
+          { title: "資訊媒體組長", name: "賴組長", ext: ["1603"] },
+          { title: "幹事/讀者服務櫃台", name: "呂小姐", ext: ["1605"] },
+          { title: "喜閱學堂", name: "", ext: ["1606"] },
+          { title: "演藝廳", name: "", ext: ["1607"] }
+        ]
+      },
+      {
+        id: "vocational",
+        category: "行政處室",
+        department: "實習處",
+        directLine: "",
+        fax: "",
+        items: [
+          { title: "實習處主任", name: "簡主任", ext: ["1701"] },
+          { title: "實習就業組長", name: "蔡組長", ext: ["1702"] },
+          { title: "資訊科主任", name: "廖主任", ext: ["1703"] },
+          { title: "技佐", name: "林先生", ext: ["1704"] },
+          { title: "電子科主任", name: "余主任", ext: ["1705"] },
+          { title: "技士", name: "卓小姐", ext: ["1706"] }
+        ]
+      },
+      {
+        id: "cooperative",
+        category: "行政處室",
+        department: "員生社",
+        directLine: "4750453",
+        fax: "",
+        items: [
+          { title: "員生社", name: "林小姐", ext: ["1491"] }
+        ]
+      },
+      {
+        id: "homeroom_teachers",
+        category: "導師與教師",
+        department: "導師辦公室",
+        directLine: "",
+        fax: "",
+        items: [
+          { title: "悅知樓1樓導師室(高一)", name: "", ext: ["1361", "1365"] },
+          { title: "悅知樓2樓導師室(高一)", name: "", ext: ["1366"] },
+          { title: "悅知樓3樓導師室(高二)", name: "", ext: ["1362", "1364"] },
+          { title: "日新樓1樓導師室(高三)", name: "", ext: ["1363", "1367"] }
+        ]
+      },
+      {
+        id: "subject_teachers",
+        category: "導師與教師",
+        department: "專任教師辦公室",
+        directLine: "",
+        fax: "",
+        items: [
+          { title: "蘊慧樓1樓專一辦公室", name: "", ext: ["1271", "1275"] },
+          { title: "蘊慧樓2樓專二辦公室", name: "", ext: ["1272"] },
+          { title: "日新樓2樓專三辦公室", name: "", ext: ["1273"] },
+          { title: "日新樓3樓專四辦公室", name: "", ext: ["1274"] }
+        ]
+      },
+      {
+        id: "labs",
+        category: "專科教室與實驗室",
+        department: "實驗室",
+        directLine: "",
+        fax: "",
+        items: [
+          { title: "化學實驗室", name: "", ext: ["1373"] },
+          { title: "基礎理化實驗室", name: "", ext: ["1374"] },
+          { title: "物理實驗室", name: "", ext: ["1375"] },
+          { title: "生物實驗室", name: "", ext: ["1376"] },
+          { title: "基礎生物實驗室", name: "", ext: ["1378"] },
+          { title: "地科實驗室", name: "", ext: ["1379"] }
+        ]
+      },
+      {
+        id: "special_classrooms",
+        category: "專科教室與實驗室",
+        department: "專科教室",
+        directLine: "",
+        fax: "",
+        items: [
+          { title: "啟明樓校史室", name: "", ext: ["1284"] },
+          { title: "語言教室", name: "", ext: ["1285"] },
+          { title: "蘊慧樓電腦機房", name: "", ext: ["1286"] },
+          { title: "電腦教室一", name: "", ext: ["1287"] },
+          { title: "視聽一教室", name: "", ext: ["1288"] },
+          { title: "電腦教室二", name: "", ext: ["1289"] },
+          { title: "美術教室", name: "", ext: ["1291"] },
+          { title: "科技應用教室", name: "", ext: ["1292"] },
+          { title: "新興科技推廣教室", name: "", ext: ["1293"] },
+          { title: "雙語教室", name: "", ext: ["1294"] },
+          { title: "電腦教室三", name: "", ext: ["1295"] },
+          { title: "探究與實作教室", name: "", ext: ["1296"] },
+          { title: "環境教育中心", name: "", ext: ["1297"] }
+        ]
+      },
+      {
+        id: "rixin_special",
+        category: "專科教室與實驗室",
+        department: "日新樓專科教室",
+        directLine: "",
+        fax: "",
+        items: [
+          { title: "英語情境教室", name: "", ext: ["1711"] },
+          { title: "日新樓展演中心", name: "", ext: ["1712"] },
+          { title: "護理教室", name: "", ext: ["1751"] },
+          { title: "計概教室", name: "", ext: ["1752"] },
+          { title: "音樂教室", name: "", ext: ["1761"] },
+          { title: "藝術生活教室", name: "", ext: ["1764"] },
+          { title: "視覺藝術教室", name: "", ext: ["1765"] }
+        ]
+      },
+      {
+        id: "yufeng_bldg",
+        category: "場館與大樓設施",
+        department: "御風樓",
+        directLine: "",
+        fax: "",
+        items: [
+          { title: "御風2-1", name: "", ext: ["2421"] },
+          { title: "御風2-2", name: "", ext: ["2422"] },
+          { title: "御風2-3", name: "", ext: ["2423"] },
+          { title: "御風3-1", name: "", ext: ["2431"] },
+          { title: "御風3-2", name: "", ext: ["2432"] },
+          { title: "御風3-3", name: "", ext: ["2433"] },
+          { title: "御風3-4", name: "", ext: ["2434"] },
+          { title: "社團教室2", name: "", ext: ["2435"] }
+        ]
+      },
+      {
+        id: "lifesci_bldg",
+        category: "專科教室與實驗室",
+        department: "生科大樓",
+        directLine: "",
+        fax: "",
+        items: [
+          { title: "體育器材室", name: "", ext: ["1811"] },
+          { title: "烹飪教室", name: "", ext: ["1822"] },
+          { title: "生活科技教室", name: "", ext: ["1821"] },
+          { title: "家政教室", name: "", ext: ["1822"] }
+        ]
+      }
+    ];
+
+    // State Variables
+    let currentCategory = 'all';
+    let searchQuery = '';
+    let currentTab = 'all'; // 'all' | 'favorites' | 'direct'
+    let favorites = JSON.parse(localStorage.getItem('ymsh_fav_exts') || '[]');
+
+    // DOM References
+    const searchInput = document.getElementById('search-input');
+    const clearSearchBtn = document.getElementById('clear-search');
+    const searchStatusBar = document.getElementById('search-status-bar');
+    const searchCountEl = document.getElementById('search-count');
+    const emptyState = document.getElementById('empty-state');
+    const contactsContainer = document.getElementById('contacts-container');
+    const favCountEl = document.getElementById('fav-count');
+    const badgeFavEl = document.getElementById('badge-fav');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+
+    // Modals
+    const trunkModal = document.getElementById('trunk-modal');
+    const trunkModalContent = document.getElementById('trunk-modal-content');
+    const extSelectModal = document.getElementById('ext-select-modal');
+    const extSelectContent = document.getElementById('ext-select-content');
+    const extModalTitle = document.getElementById('ext-modal-title');
+    const extModalSubtitle = document.getElementById('ext-modal-subtitle');
+    const extModalOptions = document.getElementById('ext-modal-options');
+
+    // Init
+    function init() {
+      updateFavCounts();
+      renderContacts();
+      setupEvents();
+    }
+
+    // Update Favorites Counter UI
+    function updateFavCounts() {
+      const count = favorites.length;
+      favCountEl.textContent = count;
+      if (count > 0) {
+        badgeFavEl.textContent = count;
+        badgeFavEl.classList.remove('hidden');
+      } else {
+        badgeFavEl.classList.add('hidden');
+      }
+    }
+
+    // Toggle Favorite
+    function toggleFavorite(ext, title, dept, e) {
+      if (e) e.stopPropagation();
+      const index = favorites.indexOf(ext);
+      if (index === -1) {
+        favorites.push(ext);
+        showToast(`已收藏分機 ${ext} (${title})`);
+      } else {
+        favorites.splice(index, 1);
+        showToast(`已取消收藏分機 ${ext}`);
+      }
+      localStorage.setItem('ymsh_fav_exts', JSON.stringify(favorites));
+      updateFavCounts();
+      renderContacts();
+    }
+
+    // Toast Message
+    let toastTimer;
+    function showToast(msg) {
+      clearTimeout(toastTimer);
+      toastMessage.textContent = msg;
+      toast.classList.remove('-translate-y-16', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('-translate-y-16', 'opacity-0');
+      }, 2000);
+    }
+
+    // Copy Extension Number
+    function copyExt(ext, title, dept, e) {
+      if (e) e.stopPropagation();
+      navigator.clipboard.writeText(ext).then(() => {
+        showToast(`已複製分機 ${ext} (${dept || ''} ${title || ''})`);
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = ext;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast(`已複製分機 ${ext}`);
+      });
+    }
+
+    // Dial Action
+    function dialExt(extList, title, dept) {
+      if (extList.length === 1) {
+        // Direct mobile dial with Yangmei trunk
+        window.location.href = `tel:034789618,${extList[0]}`;
+      } else {
+        // Open multi-extension selector
+        openMultiExtModal(extList, title, dept);
+      }
+    }
+
+    // Open multi-ext modal
+    function openMultiExtModal(extList, title, dept) {
+      extModalTitle.textContent = `${dept} • ${title}`;
+      extModalSubtitle.textContent = `請選擇要撥打或複製的分機號碼：`;
+      
+      extModalOptions.innerHTML = extList.map(ext => `
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200 tap-active">
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs font-mono">
+              #
+            </span>
+            <div>
+              <span class="text-xs text-slate-500 font-medium">分機號碼</span>
+              <p class="text-base font-bold text-slate-900 font-mono tracking-wide">${ext}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="copyExt('${ext}', '${escapeHTML(title)}', '${escapeHTML(dept)}')" class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold tap-active">
+              複製
+            </button>
+            <a href="tel:034789618,${ext}" class="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold tap-active shadow-sm">
+              <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 4V3z"></path></svg>
+              <span>撥號</span>
+            </a>
+          </div>
+        </div>
+      `).join('');
+
+      extSelectModal.classList.remove('opacity-0', 'pointer-events-none');
+      extSelectModal.classList.add('opacity-100');
+      extSelectContent.classList.remove('translate-y-full');
+      extSelectContent.classList.add('translate-y-0');
+    }
+
+    function closeExtModal() {
+      extSelectModal.classList.remove('opacity-100');
+      extSelectModal.classList.add('opacity-0', 'pointer-events-none');
+      extSelectContent.classList.remove('translate-y-0');
+      extSelectContent.classList.add('translate-y-full');
+    }
+
+    // Trunk Modal actions
+    function openTrunkModal() {
+      trunkModal.classList.remove('opacity-0', 'pointer-events-none');
+      trunkModal.classList.add('opacity-100');
+      trunkModalContent.classList.remove('translate-y-full');
+      trunkModalContent.classList.add('translate-y-0');
+    }
+
+    function closeTrunkModal() {
+      trunkModal.classList.remove('opacity-100');
+      trunkModal.classList.add('opacity-0', 'pointer-events-none');
+      trunkModalContent.classList.remove('translate-y-0');
+      trunkModalContent.classList.add('translate-y-full');
+    }
+
+    // Switch Bottom Tab
+    function switchTab(tab) {
+      currentTab = tab;
+      
+      // Tab styling
+      const tabs = ['all', 'favorites', 'direct'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-${t === 'all' ? 'all' : t === 'favorites' ? 'fav' : 'direct'}`);
+        if (!btn) return;
+        if (t === tab) {
+          btn.classList.add('text-blue-600');
+          btn.classList.remove('text-slate-500');
+        } else {
+          btn.classList.remove('text-blue-600');
+          btn.classList.add('text-slate-500');
+        }
+      });
+
+      // Filter accordingly
+      if (tab === 'favorites') {
+        currentCategory = 'favorites';
+        updatePillsUI('favorites');
+      } else if (tab === 'direct') {
+        renderDirectLinesView();
+        return;
+      } else {
+        currentCategory = 'all';
+        updatePillsUI('all');
+      }
+
+      renderContacts();
+    }
+
+    function updatePillsUI(cat) {
+      document.querySelectorAll('.cat-pill').forEach(pill => {
+        if (pill.getAttribute('data-cat') === cat) {
+          pill.classList.add('bg-white', 'text-blue-900', 'font-semibold', 'active');
+          pill.classList.remove('bg-white/20', 'text-white');
+        } else {
+          pill.classList.remove('bg-white', 'text-blue-900', 'font-semibold', 'active');
+          pill.classList.add('bg-white/20', 'text-white');
+        }
+      });
+    }
+
+    // Direct lines special tab render
+    function renderDirectLinesView() {
+      const deptsWithLines = DIRECTORY_DATA.filter(d => d.directLine || d.fax);
+      
+      let html = `
+        <div class="bg-blue-50 border border-blue-200 rounded-2xl p-3.5 mb-3">
+          <h2 class="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            楊梅高中 各處室專線與傳真電話
+          </h2>
+          <p class="text-[11px] text-blue-700 mt-1">外線可不經總機直接撥打進入對應處室</p>
+        </div>
+        <div class="space-y-2.5">
+      `;
+
+      deptsWithLines.forEach(d => {
+        html += `
+          <div class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-xs space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-bold text-slate-900">${d.department}</span>
+              <span class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${d.category}</span>
+            </div>
+            <div class="flex flex-col gap-1.5 pt-1">
+              ${d.directLine ? `
+                <a href="tel:03${d.directLine}" class="flex items-center justify-between p-2 rounded-xl bg-blue-50/80 border border-blue-100 text-blue-900 tap-active">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold bg-blue-600 text-white px-1.5 py-0.5 rounded">專線</span>
+                    <span class="font-mono font-bold text-sm">03-${d.directLine}</span>
+                  </div>
+                  <span class="text-[11px] font-semibold text-blue-600 flex items-center gap-1">
+                    撥打
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                  </span>
+                </a>
+              ` : ''}
+              ${d.fax ? `
+                <div class="flex items-center justify-between p-2 rounded-xl bg-rose-50/80 border border-rose-100 text-rose-900">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold bg-rose-600 text-white px-1.5 py-0.5 rounded">傳真</span>
+                    <span class="font-mono font-semibold text-sm">03-${d.fax}</span>
+                  </div>
+                  <button onclick="copyExt('${d.fax}', '傳真', '${escapeHTML(d.department)}')" class="text-[11px] font-semibold text-rose-600 bg-white border border-rose-200 px-2 py-0.5 rounded-lg tap-active">
+                    複製
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      contactsContainer.innerHTML = html;
+      emptyState.classList.add('hidden');
+      searchStatusBar.classList.add('hidden');
+    }
+
+    // Highlight text
+    function highlight(text) {
+      if (!text) return '';
+      if (!searchQuery.trim()) return escapeHTML(text);
+      const q = searchQuery.trim();
+      const escapedText = escapeHTML(text);
+      const regex = new RegExp(`(${escapeRegExp(q)})`, 'gi');
+      return escapedText.replace(regex, '<span class="highlight-text">$1</span>');
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // Render Contacts List
+    function renderContacts() {
+      if (currentTab === 'direct') {
+        renderDirectLinesView();
+        return;
+      }
+
+      const query = searchQuery.trim().toLowerCase();
+      let matchCount = 0;
+
+      const filteredDepts = DIRECTORY_DATA.map(dept => {
+        if (currentCategory !== 'all' && currentCategory !== 'favorites') {
+          if (dept.category !== currentCategory) return null;
+        }
+
+        const filteredItems = dept.items.filter(item => {
+          if (currentCategory === 'favorites') {
+            const isFav = item.ext.some(e => favorites.includes(e));
+            if (!isFav) return false;
+          }
+
+          if (!query) return true;
+
+          const titleMatch = (item.title || '').toLowerCase().includes(query);
+          const nameMatch = (item.name || '').toLowerCase().includes(query);
+          const extMatch = item.ext.some(e => e.toLowerCase().includes(query));
+          const deptMatch = (dept.department || '').toLowerCase().includes(query);
+          const directMatch = (dept.directLine || '').toLowerCase().includes(query);
+
+          return titleMatch || nameMatch || extMatch || deptMatch || directMatch;
+        });
+
+        if (filteredItems.length > 0) {
+          matchCount += filteredItems.length;
+          return {
+            ...dept,
+            items: filteredItems
+          };
+        }
+        return null;
+      }).filter(Boolean);
+
+      // Handle search bar counters
+      if (query) {
+        searchStatusBar.classList.remove('hidden');
+        searchCountEl.textContent = matchCount;
+      } else {
+        searchStatusBar.classList.add('hidden');
+      }
+
+      if (filteredDepts.length === 0) {
+        contactsContainer.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      let html = '';
+      filteredDepts.forEach(dept => {
+        html += `
+          <!-- Department Card -->
+          <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+            
+            <!-- Sticky Section Header -->
+            <div class="bg-slate-50/90 px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between">
+              <div class="flex items-center gap-1.5">
+                <span class="w-1.5 h-3.5 rounded-full bg-blue-600 inline-block"></span>
+                <h3 class="font-bold text-slate-900 text-xs tracking-tight">${highlight(dept.department)}</h3>
+                <span class="text-[10px] text-slate-400 font-medium">(${dept.items.length})</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-[10px]">
+                ${dept.directLine ? `
+                  <a href="tel:03${dept.directLine}" class="text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded font-mono font-medium tap-active">
+                    專線 03-${dept.directLine}
+                  </a>
+                ` : ''}
+                ${dept.fax ? `
+                  <span class="text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded font-mono font-medium">
+                    傳真 ${dept.fax}
+                  </span>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- List items -->
+            <div class="divide-y divide-slate-100">
+              ${dept.items.map(item => {
+                const isFav = item.ext.some(e => favorites.includes(e));
+                const firstExt = item.ext[0];
+                const hasMultiple = item.ext.length > 1;
+
+                return `
+                  <div class="p-3 flex items-center justify-between gap-2.5 hover:bg-slate-50/60 transition">
+                    
+                    <!-- Left: Title & Name -->
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-semibold text-slate-900 text-xs sm:text-sm tracking-tight leading-snug">
+                          ${highlight(item.title)}
+                        </span>
+                        ${item.name ? `
+                          <span class="text-[11px] font-medium text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded-md shrink-0">
+                            ${highlight(item.name)}
+                          </span>
+                        ` : ''}
+                      </div>
+
+                      <!-- Extension Badges (Tap to copy) -->
+                      <div class="flex items-center gap-1.5 mt-1">
+                        ${item.ext.map(e => `
+                          <button 
+                            onclick="copyExt('${e}', '${escapeHTML(item.title)}', '${escapeHTML(dept.department)}', event)"
+                            class="tap-active text-[11px] font-mono font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-2 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs"
+                            title="點擊複製分機"
+                          >
+                            <span>${highlight(e)}</span>
+                            <svg class="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                          </button>
+                        `).join('')}
+                      </div>
+                    </div>
+
+                    <!-- Right: Quick Actions (Dial & Fav) -->
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      
+                      <!-- Favorite Button -->
+                      <button 
+                        onclick="toggleFavorite('${firstExt}', '${escapeHTML(item.title)}', '${escapeHTML(dept.department)}', event)"
+                        class="p-2 text-slate-300 hover:text-amber-500 rounded-xl tap-active transition ${isFav ? 'text-amber-500' : ''}"
+                        title="${isFav ? '取消常用' : '加入常用'}"
+                      >
+                        <svg class="w-4 h-4 ${isFav ? 'fill-amber-500' : 'fill-none stroke-current'}" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                        </svg>
+                      </button>
+
+                      <!-- One-Tap Dial Button -->
+                      <button 
+                        onclick="dialExt(${JSON.stringify(item.ext)}, '${escapeHTML(item.title)}', '${escapeHTML(dept.department)}')"
+                        class="tap-active flex items-center justify-center w-8 h-8 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm"
+                        title="立即撥號"
+                      >
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                          <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 4V3z"></path>
+                        </svg>
+                      </button>
+
+                    </div>
+
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+          </div>
+        `;
+      });
+
+      contactsContainer.innerHTML = html;
+    }
+
+    // Clear Search Input
+    function clearSearch() {
+      searchInput.value = '';
+      searchQuery = '';
+      clearSearchBtn.classList.add('hidden');
+      searchStatusBar.classList.add('hidden');
+      renderContacts();
+      searchInput.focus();
+    }
+
+    // Setup Event Listeners
+    function setupEvents() {
+      // Search input
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value;
+        if (searchQuery.trim()) {
+          clearSearchBtn.classList.remove('hidden');
+        } else {
+          clearSearchBtn.classList.add('hidden');
+        }
+        renderContacts();
+      });
+
+      clearSearchBtn.addEventListener('click', clearSearch);
+
+      // Category pills
+      document.querySelectorAll('.cat-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          document.querySelectorAll('.cat-pill').forEach(p => {
+            p.classList.remove('bg-white', 'text-blue-900', 'font-semibold', 'active');
+            p.classList.add('bg-white/20', 'text-white');
+          });
+          pill.classList.remove('bg-white/20', 'text-white');
+          pill.classList.add('bg-white', 'text-blue-900', 'font-semibold', 'active');
+
+          currentCategory = pill.getAttribute('data-cat');
+          currentTab = currentCategory === 'favorites' ? 'favorites' : 'all';
+          
+          // Sync bottom tabs
+          const tabAll = document.getElementById('tab-all');
+          const tabFav = document.getElementById('tab-fav');
+          if (currentCategory === 'favorites') {
+            tabFav.classList.add('text-blue-600');
+            tabFav.classList.remove('text-slate-500');
+            tabAll.classList.remove('text-blue-600');
+            tabAll.classList.add('text-slate-500');
+          } else {
+            tabAll.classList.add('text-blue-600');
+            tabAll.classList.remove('text-slate-500');
+            tabFav.classList.remove('text-blue-600');
+            tabFav.classList.add('text-slate-500');
+          }
+
+          renderContacts();
+        });
+      });
+
+      // Close modal on background tap
+      trunkModal.addEventListener('click', (e) => {
+        if (e.target === trunkModal) closeTrunkModal();
+      });
+      extSelectModal.addEventListener('click', (e) => {
+        if (e.target === extSelectModal) closeExtModal();
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
